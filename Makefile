@@ -37,3 +37,8 @@ docker-compose-down:
 docker-compose-logs:
 	docker-compose -f docker-compose-dev.yaml logs -f
 .PHONY: docker-compose-logs
+
+docker-compose-test:
+	docker build -f ./test/Dockerfile -t "testserver:latest" .
+	docker run --rm -v $(PWD)/config/server.ini:/config.ini --network tp0-base_testing_net testserver:latest $(teststr)
+.PHONY: docker-compose-test
