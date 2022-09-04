@@ -1,6 +1,9 @@
 import socket
 import logging
-
+import signal
+        
+class SignalException(Exception):
+	pass
 
 class Server:
     def __init__(self, port, listen_backlog):
@@ -8,21 +11,27 @@ class Server:
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
+        self.active = True
 
     def run(self):
         """
         Dummy Server loop
 
         Server that accept a new connections and establishes a
-        communication with a client. After client with communucation
+        communication with a client. After client with communication
         finishes, servers starts to accept new connections again
         """
+        
+        signal.signal(signal.SIGINT, self.sig_handler)
+        signal.signal(signal.SIGTERM, self.sig_handler)
 
         # TODO: Modify this program to handle signal to graceful shutdown
         # the server
-        while True:
-            client_sock = self.__accept_new_connection()
-            self.__handle_client_connection(client_sock)
+        while self.active:
+        	client_sock = self.__accept_new_connection()
+        	if client_sock: 
+        		self.__handle_client_connection(client_sock)
+        
 
     def __handle_client_connection(self, client_sock):
         """
@@ -52,6 +61,16 @@ class Server:
 
         # Connection arrived
         logging.info("Proceed to accept new connections")
-        c, addr = self._server_socket.accept()
-        logging.info('Got connection from {}'.format(addr))
-        return c
+        try:
+        	c, addr = self._server_socket.accept()
+        	logging.info('Got connection from {}'.format(addr))
+        	return c
+        except SignalException:
+            logging.info("Got signal. Shutting down socket...")
+            return None
+            
+    def sig_handler(self, sig, frame):
+        self.active = False
+        self._server_socket.shutdown(socket.SHUT_RDWR)
+        raise SignalException()
+
