@@ -1,6 +1,9 @@
 package common
 
 import (
+    "os"
+    "os/signal"
+    "syscall"
 	"bufio"
 	"fmt"
 	"net"
@@ -52,17 +55,27 @@ func (c *Client) createClientSocket() error {
 func (c *Client) StartClientLoop() {
 	// Create the connection the server in every loop iteration. Send an
 	// autoincremental msgID to identify every message sent
-	c.createClientSocket()
 	msgID := 1
+	
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	timeoutChannel := time.After(c.config.LoopLapse)
 
 loop:
 	// Send messages if the loopLapse threshold has been not surpassed
-	for timeout := time.After(c.config.LoopLapse); ; {
+	for {
 		select {
-		case <-timeout:
+		case <- signalChannel:
+			log.Infof("[CLIENT %v] Got signal", c.config.ID)
 			break loop
-		default:
+		case <- timeoutChannel:
+			break loop
+		case <- time.After(c.config.LoopPeriod):
+		// Wait a time between sending one message and the next one	
 		}
+
+		// Recreate connection to the server
+		c.createClientSocket()
 
 		// Send
 		fmt.Fprintf(
@@ -85,14 +98,9 @@ loop:
 		}
 		log.Infof("[CLIENT %v] Message from server: %v", c.config.ID, msg)
 
-		// Wait a time between sending one message and the next one
-		time.Sleep(c.config.LoopPeriod)
-
-		// Recreate connection to the server
+		log.Infof("[CLIENT %v] Closing connection", c.config.ID)
 		c.conn.Close()
-		c.createClientSocket()
 	}
 
-	log.Infof("[CLIENT %v] Closing connection", c.config.ID)
-	c.conn.Close()
+	log.Infof("[CLIENT %v] Shutdown", c.config.ID)
 }
