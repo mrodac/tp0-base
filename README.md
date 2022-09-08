@@ -13,3 +13,5 @@ make docker-compose-down
 
 Se utiliza un pool de procesos de tamaño configurable por achivo. El servidor al recibir un mensaje de un cliente lo agrega a una cola del paquete multiprocessing para que uno de los procesos hijos lo tome y maneje.
 Cuando el proceso padre recibe la señal SIGTERM, la reenvía a los hijos para que salgan de la espera sobre la cola y puedan ser joineados.
+
+Para persistir ganadores se utiliza un proceso aparte que es el único que puede escribir en el achivo. Utiliza una cola para recibir los datos a persistir.

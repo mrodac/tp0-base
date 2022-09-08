@@ -2,24 +2,23 @@ import socket
 import logging
 import signal
 import os
-import multiprocessing as mp
+from multiprocessing import Queue, Process
 
 from . import client_request
-        
-class SignalException(Exception):
-	pass
+from .utils import SignalException
+from .storage import Storage
 
 def child_signal_handler(sig, frame):
     raise SignalException() 
 
-def do_work(workQueue):
+def do_work(workQueue, dataQueue):
     logging.info("Starting child process {}".format(os.getpid()))
     signal.signal(signal.SIGTERM, child_signal_handler)
 
     while True:
         try:
             request = workQueue.get()
-            request.handle()
+            request.handle(dataQueue)
         except SignalException:
             logging.debug("Process {} got SIGTERM".format(os.getpid()))
             break
@@ -38,7 +37,8 @@ class Server:
         self._server_socket.listen()
 
         self.workerCount = server_child_processes
-        self.workQueue = mp.Queue()
+        self.workQueue = Queue()
+        self.workers = []
 
     def run(self):
         """
@@ -51,7 +51,8 @@ class Server:
         signal.signal(signal.SIGTERM, self.sig_handler)
 
         for i in range(self.workerCount):
-            process = mp.Process(target=do_work, args=(self.workQueue,))
+            process = Process(target=do_work, args=(self.workQueue, Storage.dataQueue,))
+            self.workers.append(process)
             process.start()
         
         while True:
@@ -65,7 +66,7 @@ class Server:
                 logging.info('Accept interrupted by signal')
                 break
         
-        for process in mp.active_children():
+        for process in self.workers:
             process.join()
     
     
@@ -74,7 +75,7 @@ class Server:
 
         self.workQueue.close()
 
-        for process in mp.active_children():
+        for process in self.workers:
             process.terminate()
 
         self._server_socket.shutdown(socket.SHUT_RDWR)
