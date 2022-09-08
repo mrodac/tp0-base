@@ -22,7 +22,6 @@ class Server:
         finishes, servers starts to accept new connections again
         """
         
-        signal.signal(signal.SIGINT, self.sig_handler)
         signal.signal(signal.SIGTERM, self.sig_handler)
 
         # TODO: Modify this program to handle signal to graceful shutdown
@@ -66,7 +65,7 @@ class Server:
         	logging.info('Got connection from {}'.format(addr))
         	return c
         except SignalException:
-            logging.info("Got signal. Shutting down socket...")
+            logging.info("Got SIGTERM. Shutting down socket...")
             return None
             
     def sig_handler(self, sig, frame):

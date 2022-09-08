@@ -1,11 +1,7 @@
-git checkout ej3
+git checkout ej4
 
-### Ejercicio N°3:
+### Ejercicio N°4:
 
-make docker-compose-up
-
-make docker-compose-test
-
-make teststr=aaaaaaa docker-compose-test
+make docker-compose-up && make docker-compose-logs
 
 make docker-compose-down

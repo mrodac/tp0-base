@@ -58,7 +58,7 @@ func (c *Client) StartClientLoop() {
 	msgID := 1
 	
 	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(signalChannel, syscall.SIGTERM)
 	timeoutChannel := time.After(c.config.LoopLapse)
 
 loop:
@@ -66,7 +66,7 @@ loop:
 	for {
 		select {
 		case <- signalChannel:
-			log.Infof("[CLIENT %v] Got signal", c.config.ID)
+			log.Infof("[CLIENT %v] Got SIGTERM", c.config.ID)
 			break loop
 		case <- timeoutChannel:
 			break loop
