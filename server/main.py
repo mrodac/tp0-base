@@ -48,6 +48,7 @@ def main():
 
     print()
 
+    print()
 
 def initialize_log(logging_level):
     """

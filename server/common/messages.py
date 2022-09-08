@@ -109,4 +109,3 @@ def write_message(msgType, msg, conn: socket.socket):
         case _:
             logging.error("Got unkwown msgType {}".format(ordinal))
 
-
