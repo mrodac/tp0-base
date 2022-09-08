@@ -4,7 +4,6 @@ import os
 import logging
 from configparser import ConfigParser
 from common.server import Server
-from common.file import File
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -42,14 +41,10 @@ def main():
     # of the component
     logging.debug("Server configuration: {}".format(config_params))
 
-    File.open()
-
     # Initialize server and start server loop
     server = Server(config_params["port"], config_params["server_child_processes"])
     server.run()
     logging.debug("Server OFFLINE")
-
-    File.close()
 
     print()
 
