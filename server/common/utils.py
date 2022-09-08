@@ -18,17 +18,12 @@ class Contestant:
 	def __hash__(self):
 		return hash((self.first_name, self.last_name, self.document, self.birthdate))
 
-	def __repr__(self):
-		return "{} {} {} {}".format(self.first_name, self.last_name, self.document, self.birthdate)
-
 
 """ Checks whether a contestant is a winner or not. """
 def is_winner(contestant: Contestant) -> bool:
 	# Simulate strong computation requirements using a sleep to increase function retention and force concurrency.
 	time.sleep(0.001)
-	winner = hash(contestant) % 17 == 0
-	logging.debug('is_winner {} {}? {}'.format(contestant.first_name, contestant.last_name, winner))
-	return winner
+	return hash(contestant) % 17 == 0
 
 
 """ Persist the information of each winner in the STORAGE file. Not thread-safe/process-safe. """
