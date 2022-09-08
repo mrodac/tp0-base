@@ -4,7 +4,10 @@ import (
 	"encoding/csv"
 	"io"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -17,17 +20,27 @@ type Contestant struct {
 }
 
 type Agency struct {
-	client *Client
+	client        *Client
+	interrupt     chan os.Signal
+	retryDuration time.Duration
 }
 
 func NewAgency(client *Client) *Agency {
-	domain := &Agency{
-		client: client,
+
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, syscall.SIGTERM)
+
+	dur, _ := time.ParseDuration("10s")
+
+	agency := &Agency{
+		client:        client,
+		interrupt:     interrupt,
+		retryDuration: dur,
 	}
-	return domain
+	return agency
 }
 
-func (domain *Agency) CheckWinners() error {
+func (agency *Agency) CheckWinners() error {
 
 	dataset, err := os.Open("/dataset.csv")
 	if err != nil {
@@ -70,15 +83,39 @@ func (domain *Agency) CheckWinners() error {
 		//log.Debugf("[CLIENT 1] Contestant: %d %s %s %s", contestant.Document, contestant.FirstName, contestant.LastName, contestant.BirthDate)
 	}
 
-	msg := &ContestantsQuery{
+	msg := &ContestantsMessage{
 		Contestants: slice,
 	}
 
-	res := domain.client.queryWinners(msg)
+	response := agency.client.queryWinners(msg)
 
 	if len(slice) > 0 {
-		percentage := float64(len(res.Winners)) / float64(len(slice))
+		percentage := float64(len(response.Winners)) / float64(len(slice))
 		log.Infof("Winner percentage: %f", 100*percentage)
+	}
+
+	return nil
+}
+
+func (agency *Agency) TotalWinners() error {
+
+	response := agency.client.queryTotalWinners()
+
+loop:
+	for response.Pending > 0 {
+		log.Infof("Partial Winner count: %d. Processing %d agencies", response.TotalWinners, response.Pending)
+
+		select {
+		case <-agency.interrupt:
+			log.Infof("Got SIGTERM")
+			response = nil
+			break loop
+		case <-time.After(agency.retryDuration):
+		}
+		response = agency.client.queryTotalWinners()
+	}
+	if response != nil {
+		log.Infof("Total winner count: %d", response.TotalWinners)
 	}
 
 	return nil

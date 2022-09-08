@@ -62,11 +62,27 @@ func (c *Client) CloseClientSocket() error {
 	return nil
 }
 
-func (c *Client) queryWinners(contestants *ContestantsQuery) *WinnerResponse {
+func (c *Client) queryWinners(contestants *ContestantsMessage) *WinnersMessage {
+
+	c.CreateClientSocket()
+	defer c.CloseClientSocket()
+
 	writer := bufio.NewWriter(c.conn)
 	WriteContestantsMessage(contestants, writer)
 	writer.Flush()
 
 	reader := bufio.NewReader(c.conn)
 	return ReadWinnerMessage(reader)
+}
+
+func (c *Client) queryTotalWinners() *TotalWinnersMessage {
+	c.CreateClientSocket()
+	defer c.CloseClientSocket()
+
+	writer := bufio.NewWriter(c.conn)
+	WriteTotalWinnerMessage(writer)
+	writer.Flush()
+
+	reader := bufio.NewReader(c.conn)
+	return ReadTotalWinnersMessage(reader)
 }

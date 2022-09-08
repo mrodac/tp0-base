@@ -41,7 +41,7 @@ render_client () {
     entrypoint: /client
     volumes:
       - ./config/client.yaml:/config.yaml
-      - ./.data/dataset-${1}.csv:/dataset.csv
+      - ./.data/dataset-$(((${1}-1)%5+1)).csv:/dataset.csv
     environment:
       - CLI_ID=${1}
       - CLI_SERVER_ADDRESS=server:12345

@@ -3,23 +3,32 @@ package common
 import (
 	"bufio"
 	"encoding/binary"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	Query    byte = 0
-	Response byte = 1
+	WinnerQuery         byte = 0
+	WinnerResponse      byte = 1
+	TotalWinnerQuery    byte = 2
+	TotalWinnerResponse byte = 3
 )
 
 type Message struct {
 	Type byte
 }
 
-type ContestantsQuery struct {
+type ContestantsMessage struct {
 	Contestants []Contestant
 }
 
-type WinnerResponse struct {
+type WinnersMessage struct {
 	Winners []uint32
+}
+
+type TotalWinnersMessage struct {
+	TotalWinners uint32
+	Pending      byte
 }
 
 func ContestantToBytes(c *Contestant, writer *bufio.Writer) {
@@ -41,8 +50,10 @@ func ContestantFromBytes(reader *bufio.Reader) *Contestant {
 	return c
 }
 
-func WriteContestantsMessage(msg *ContestantsQuery, writer *bufio.Writer) {
-	writer.WriteByte(Query)
+func WriteContestantsMessage(msg *ContestantsMessage, writer *bufio.Writer) {
+	log.Infof("Sending message: %d", WinnerQuery)
+
+	writer.WriteByte(WinnerQuery)
 	binary.Write(writer, binary.BigEndian, int32(len(msg.Contestants)))
 
 	for _, s := range msg.Contestants {
@@ -50,10 +61,15 @@ func WriteContestantsMessage(msg *ContestantsQuery, writer *bufio.Writer) {
 	}
 }
 
-func ReadWinnerMessage(reader *bufio.Reader) *WinnerResponse {
+func WriteTotalWinnerMessage(writer *bufio.Writer) {
+	log.Infof("Sending message: %d", TotalWinnerQuery)
+	writer.WriteByte(TotalWinnerQuery)
+}
+
+func ReadWinnerMessage(reader *bufio.Reader) *WinnersMessage {
 	reader.ReadByte()
 
-	msg := &WinnerResponse{}
+	msg := &WinnersMessage{}
 
 	var len int32
 	binary.Read(reader, binary.BigEndian, &len)
@@ -66,6 +82,18 @@ func ReadWinnerMessage(reader *bufio.Reader) *WinnerResponse {
 		binary.Read(reader, binary.BigEndian, &document)
 		msg.Winners[i] = document
 	}
+
+	return msg
+}
+
+func ReadTotalWinnersMessage(reader *bufio.Reader) *TotalWinnersMessage {
+	reader.ReadByte()
+
+	msg := &TotalWinnersMessage{}
+
+	binary.Read(reader, binary.BigEndian, &msg.TotalWinners)
+	b, _ := reader.ReadByte()
+	msg.Pending = b
 
 	return msg
 }

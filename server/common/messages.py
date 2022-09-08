@@ -4,11 +4,6 @@ from enum import IntEnum
 
 from . import utils
 
-
-class MessageType(IntEnum):
-    WINNER_QUERY = 0
-    WINNER_RESPONSE = 1
-
 def read(conn, size):
     data = b""
     remaining = size
@@ -27,6 +22,12 @@ def read_delim(conn: socket.socket):
     return data
 
 
+class MessageType(IntEnum):
+    WINNER_QUERY = 0
+    WINNER_RESPONSE = 1
+    TOTAL_WINNER_QUERY = 2
+    TOTAL_WINNER_RESPONSE = 3
+
 class ContestantsMessage:
     def __init__(self):
         self.contestants = []
@@ -42,6 +43,12 @@ class WinnersMessage:
         return 'WinnersMessage [' + str(len(self.winners)) + ']'
 
 
+class TotalWinnersResponse:
+    def __init__(self):
+        self.totalWinners = 0
+        self.pending = 0
+
+
 def read_contestant(conn: socket.socket):
     b_document = read(conn, 4)
     document = int.from_bytes(b_document, byteorder='big')
@@ -52,7 +59,7 @@ def read_contestant(conn: socket.socket):
     return utils.Contestant(first_name, last_name, document, birthdate)
     
 
-def read_winner_query(conn: socket.socket):
+def read_contestants_msg(conn: socket.socket):
     b_size = read(conn, 4)
     items = int.from_bytes(b_size, byteorder='big')
 
@@ -71,8 +78,10 @@ def read_message(conn: socket.socket):
     
     match msgType:
         case MessageType.WINNER_QUERY:
-            msg = read_winner_query(conn)
+            msg = read_contestants_msg(conn)
             return msgType, msg
+        case MessageType.TOTAL_WINNER_QUERY:
+            return msgType, None
         case _:
             logging.error("Got unkwown msgType {}".format(ordinal))
 
@@ -83,6 +92,10 @@ def write_winner_response(msg, conn: socket.socket):
     for winner in msg.winners:
         conn.sendall(winner.to_bytes(4, 'big'))
 
+def write_total_winners_response(msg, conn: socket.socket):
+    conn.sendall(msg.totalWinners.to_bytes(4, 'big'))
+    conn.sendall(msg.pending.to_bytes(1, 'big')) 
+
 
 def write_message(msgType, msg, conn: socket.socket):
     ordinal = int(msgType)
@@ -91,6 +104,8 @@ def write_message(msgType, msg, conn: socket.socket):
     match msgType:
         case MessageType.WINNER_RESPONSE:
             msg = write_winner_response(msg, conn)
+        case MessageType.TOTAL_WINNER_RESPONSE:
+            msg = write_total_winners_response(msg, conn)            
         case _:
             logging.error("Got unkwown msgType {}".format(ordinal))
 

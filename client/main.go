@@ -88,14 +88,12 @@ func main() {
 
 	log.Debugf("[CLIENT %v] Creando conexión", clientConfig.ID)
 
-	client.CreateClientSocket()
-
 	agency := common.NewAgency(client)
 
 	log.Debugf("[CLIENT %v] Corriendo agencia", clientConfig.ID)
 
 	agency.CheckWinners()
 
-	client.CloseClientSocket()
+	agency.TotalWinners()
 
 }
