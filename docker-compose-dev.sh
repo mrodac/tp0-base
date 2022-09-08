@@ -45,10 +45,10 @@ render_client () {
       - CLI_ID=${1}
       - CLI_SERVER_ADDRESS=server:12345
       - CLI_LOG_LEVEL=DEBUG
-      - DOCUMENT=19700101
-      - FIRST_NAME=Mr
-      - LAST_NAME=Epoch
-      - BIRTH_DATE=1970-01-01
+      - DOCUMENT=${1}${1}${1}${1}${1}${1}${1}${1}${1}
+      - FIRST_NAME=Nombre${1}
+      - LAST_NAME=Apellido${1}
+      - BIRTH_DATE=2000-0${1}-0${1}
     networks:
       - testing_net
     depends_on:

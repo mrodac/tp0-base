@@ -24,10 +24,10 @@ services:
       - CLI_ID=1
       - CLI_SERVER_ADDRESS=server:12345
       - CLI_LOG_LEVEL=DEBUG
-      - DOCUMENT=19700101
-      - FIRST_NAME=Mr
-      - LAST_NAME=Epoch
-      - BIRTH_DATE=1970-01-01
+      - DOCUMENT=111111111
+      - FIRST_NAME=Nombre1
+      - LAST_NAME=Apellido1
+      - BIRTH_DATE=2000-01-01
     networks:
       - testing_net
     depends_on:
@@ -43,10 +43,67 @@ services:
       - CLI_ID=2
       - CLI_SERVER_ADDRESS=server:12345
       - CLI_LOG_LEVEL=DEBUG
-      - DOCUMENT=19700101
-      - FIRST_NAME=Mr
-      - LAST_NAME=Epoch
-      - BIRTH_DATE=1970-01-01
+      - DOCUMENT=222222222
+      - FIRST_NAME=Nombre2
+      - LAST_NAME=Apellido2
+      - BIRTH_DATE=2000-02-02
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client3:
+    container_name: client3
+    image: client:latest
+    entrypoint: /client
+    volumes:
+      - ./config/client.yaml:/config.yaml
+    environment:
+      - CLI_ID=3
+      - CLI_SERVER_ADDRESS=server:12345
+      - CLI_LOG_LEVEL=DEBUG
+      - DOCUMENT=333333333
+      - FIRST_NAME=Nombre3
+      - LAST_NAME=Apellido3
+      - BIRTH_DATE=2000-03-03
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client4:
+    container_name: client4
+    image: client:latest
+    entrypoint: /client
+    volumes:
+      - ./config/client.yaml:/config.yaml
+    environment:
+      - CLI_ID=4
+      - CLI_SERVER_ADDRESS=server:12345
+      - CLI_LOG_LEVEL=DEBUG
+      - DOCUMENT=444444444
+      - FIRST_NAME=Nombre4
+      - LAST_NAME=Apellido4
+      - BIRTH_DATE=2000-04-04
+    networks:
+      - testing_net
+    depends_on:
+      - server
+
+  client5:
+    container_name: client5
+    image: client:latest
+    entrypoint: /client
+    volumes:
+      - ./config/client.yaml:/config.yaml
+    environment:
+      - CLI_ID=5
+      - CLI_SERVER_ADDRESS=server:12345
+      - CLI_LOG_LEVEL=DEBUG
+      - DOCUMENT=555555555
+      - FIRST_NAME=Nombre5
+      - LAST_NAME=Apellido5
+      - BIRTH_DATE=2000-05-05
     networks:
       - testing_net
     depends_on:

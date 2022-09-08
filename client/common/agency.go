@@ -46,7 +46,9 @@ func (domain *Agency) CheckWinners() error {
 	res := domain.client.queryWinners(msg)
 
 	if len(res.Winners) > 0 {
-		log.Infof("Ganador: %d", res.Winners[0])
+		log.Infof("Es ganador")
+	} else {
+		log.Infof("No es ganador")
 	}
 	return nil
 }
