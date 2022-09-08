@@ -24,11 +24,6 @@ render_server () {
     entrypoint: python3 /main.py
     volumes:
       - ./config/server.ini:/config.ini
-    environment:
-      - PYTHONUNBUFFERED=1
-      - SERVER_PORT=12345
-      - SERVER_LISTEN_BACKLOG=7
-      - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net"""      
 }
@@ -43,9 +38,6 @@ render_client () {
       - ./config/client.yaml:/config.yaml
     environment:
       - CLI_ID=${1}
-      - CLI_SERVER_ADDRESS=server:12345
-      - CLI_LOOP_LAPSE=1m2s
-      - CLI_LOG_LEVEL=DEBUG
     networks:
       - testing_net
     depends_on:
