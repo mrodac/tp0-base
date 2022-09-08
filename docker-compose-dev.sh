@@ -41,14 +41,11 @@ render_client () {
     entrypoint: /client
     volumes:
       - ./config/client.yaml:/config.yaml
+      - ./.data/dataset-${1}.csv:/dataset.csv
     environment:
       - CLI_ID=${1}
       - CLI_SERVER_ADDRESS=server:12345
       - CLI_LOG_LEVEL=DEBUG
-      - DOCUMENT=19700101
-      - FIRST_NAME=Mr
-      - LAST_NAME=Epoch
-      - BIRTH_DATE=1970-01-01
     networks:
       - testing_net
     depends_on:

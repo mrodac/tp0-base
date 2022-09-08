@@ -1,6 +1,8 @@
 package common
 
 import (
+	"encoding/csv"
+	"io"
 	"os"
 	"strconv"
 
@@ -26,18 +28,47 @@ func NewAgency(client *Client) *Agency {
 }
 
 func (domain *Agency) CheckWinners() error {
-	dni, _ := strconv.ParseUint(os.Getenv("DOCUMENT"), 10, 32)
-	contestant := Contestant{
-		Document:  uint32(dni),
-		FirstName: os.Getenv("FIRST_NAME"),
-		LastName:  os.Getenv("LAST_NAME"),
-		BirthDate: os.Getenv("BIRTH_DATE"),
+
+	dataset, err := os.Open("/dataset.csv")
+	if err != nil {
+		log.Fatal("Unable to read dataset file", err)
+		return err
 	}
+	defer dataset.Close()
 
-	log.Debugf("[CLIENT 1] Contestant: %d %s %s %s", contestant.Document, contestant.FirstName, contestant.LastName, contestant.BirthDate)
+	csvReader := csv.NewReader(dataset)
+	csvReader.ReuseRecord = true
+	csvReader.FieldsPerRecord = 4
 
-	slice := make([]Contestant, 1)
-	slice[0] = contestant
+	slice := make([]Contestant, 0)
+
+	for {
+		record, err := csvReader.Read()
+		if err != nil {
+			if err != io.EOF {
+				log.Errorf("Error reading csv %s", err)
+				return err
+			}
+			break
+		}
+
+		document, err := strconv.ParseUint(record[2], 10, 32)
+		if err != nil {
+			log.Errorf("Error parsing document field %s", err)
+			return err
+		}
+
+		contestant := Contestant{
+			Document:  uint32(document),
+			FirstName: record[0],
+			LastName:  record[1],
+			BirthDate: record[3],
+		}
+
+		slice = append(slice, contestant)
+
+		//log.Debugf("[CLIENT 1] Contestant: %d %s %s %s", contestant.Document, contestant.FirstName, contestant.LastName, contestant.BirthDate)
+	}
 
 	msg := &ContestantsQuery{
 		Contestants: slice,
@@ -45,8 +76,10 @@ func (domain *Agency) CheckWinners() error {
 
 	res := domain.client.queryWinners(msg)
 
-	if len(res.Winners) > 0 {
-		log.Infof("Ganador: %d", res.Winners[0])
+	if len(slice) > 0 {
+		percentage := float64(len(res.Winners)) / float64(len(slice))
+		log.Infof("Winner percentage: %f", 100*percentage)
 	}
+
 	return nil
 }

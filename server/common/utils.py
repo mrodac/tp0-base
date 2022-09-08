@@ -27,7 +27,7 @@ def is_winner(contestant: Contestant) -> bool:
 	# Simulate strong computation requirements using a sleep to increase function retention and force concurrency.
 	time.sleep(0.001)
 	winner = hash(contestant) % 17 == 0
-	logging.info('is_winner {} {}? {}'.format(contestant.first_name, contestant.last_name, winner))
+	logging.debug('is_winner {} {}? {}'.format(contestant.first_name, contestant.last_name, winner))
 	return winner
 
 

@@ -3,6 +3,9 @@ package common
 import (
 	"bufio"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -41,6 +44,16 @@ func (c *Client) CreateClientSocket() error {
 		)
 	}
 	c.conn = conn
+
+	signalChannel := make(chan os.Signal, 1)
+	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-signalChannel
+		log.Infof("[CLIENT %v] Got signal.", c.config.ID)
+		c.CloseClientSocket()
+	}()
+
 	return nil
 }
 
