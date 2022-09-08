@@ -1,13 +1,15 @@
 git checkout ej1
 
-### Ejercicio N°1:
+### Ejercicio N°2:
 
-make docker-compose-up && make docker-compose-logs &
-make docker-compose-down
+./docker-compose-dev.sh 3 > docker-compose-dev.yaml
 
-### Ejercicio N°1.1:
+make docker-image
 
-./docker-compose-dev.sh 4 > docker-compose-dev.yaml
+docker-compose -f docker-compose-dev.yaml up
 
-make docker-compose-up && make docker-compose-logs &
-make docker-compose-down
+sed -i 's/12345/54321/g' config/*
+
+docker-compose -f docker-compose-dev.yaml up
+
+
