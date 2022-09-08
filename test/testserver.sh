@@ -13,7 +13,7 @@ if [[ $? -ne 0 ]]; then
 	echo "Could not connect to server" >&2
 else
 	if [[ $OUTPUT == "Your Message has been received: $1" ]]; then
-		echo "Server responded as expected" >&2
+		echo "Server responded as expected: $OUTPUT" >&2
 	else
 		echo "Message different than expected: $OUTPUT" >&2
 	fi

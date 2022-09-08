@@ -3,14 +3,12 @@ package main
 import (
 	"fmt"
 	"strings"
-	"time"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 
-	"github.com/7574-sistemas-distribuidos/docker-compose-init/client/common"
+	common "client/common"
 )
 
 // InitConfig Function that uses viper library to parse configuration parameters.
@@ -32,8 +30,6 @@ func InitConfig() (*viper.Viper, error) {
 	// Add env variables supported
 	v.BindEnv("id")
 	v.BindEnv("server", "address")
-	v.BindEnv("loop", "period")
-	v.BindEnv("loop", "lapse")
 	v.BindEnv("log", "level")
 
 	// Try to read configuration from config file. If config file
@@ -43,15 +39,6 @@ func InitConfig() (*viper.Viper, error) {
 	v.SetConfigFile("./config.yaml")
 	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("Configuration could not be read from config file. Using env variables instead")
-	}
-
-	// Parse time.Duration variables and return an error if those variables cannot be parsed
-	if _, err := time.ParseDuration(v.GetString("loop.lapse")); err != nil {
-		return nil, errors.Wrapf(err, "Could not parse CLI_LOOP_LAPSE env var as time.Duration.")
-	}
-
-	if _, err := time.ParseDuration(v.GetString("loop.period")); err != nil {
-		return nil, errors.Wrapf(err, "Could not parse CLI_LOOP_PERIOD env var as time.Duration.")
 	}
 
 	return v, nil
@@ -76,8 +63,6 @@ func PrintConfig(v *viper.Viper) {
 	logrus.Infof("Client configuration")
 	logrus.Infof("Client ID: %s", v.GetString("id"))
 	logrus.Infof("Server Address: %s", v.GetString("server.address"))
-	logrus.Infof("Loop Lapse: %v", v.GetDuration("loop.lapse"))
-	logrus.Infof("Loop Period: %v", v.GetDuration("loop.period"))
 	logrus.Infof("Log Level: %s", v.GetString("log.level"))
 }
 
@@ -97,10 +82,20 @@ func main() {
 	clientConfig := common.ClientConfig{
 		ServerAddress: v.GetString("server.address"),
 		ID:            v.GetString("id"),
-		LoopLapse:     v.GetDuration("loop.lapse"),
-		LoopPeriod:    v.GetDuration("loop.period"),
 	}
 
 	client := common.NewClient(clientConfig)
-	client.StartClientLoop()
+
+	log.Debugf("[CLIENT %v] Creando conexión", clientConfig.ID)
+
+	client.CreateClientSocket()
+
+	agency := common.NewAgency(client)
+
+	log.Debugf("[CLIENT %v] Corriendo agencia", clientConfig.ID)
+
+	agency.CheckWinners()
+
+	client.CloseClientSocket()
+
 }

@@ -44,8 +44,11 @@ render_client () {
     environment:
       - CLI_ID=${1}
       - CLI_SERVER_ADDRESS=server:12345
-      - CLI_LOOP_LAPSE=1m2s
       - CLI_LOG_LEVEL=DEBUG
+      - DOCUMENT=19700101
+      - FIRST_NAME=Mr
+      - LAST_NAME=Epoch
+      - BIRTH_DATE=1970-01-01
     networks:
       - testing_net
     depends_on:

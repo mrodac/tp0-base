@@ -1,6 +1,8 @@
 import socket
 import logging
 import signal
+
+from . import client_request
         
 class SignalException(Exception):
 	pass
@@ -9,6 +11,7 @@ class Server:
     def __init__(self, port, listen_backlog):
         # Initialize server socket
         self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._server_socket.bind(('', port))
         self._server_socket.listen(listen_backlog)
         self.active = True
@@ -41,11 +44,8 @@ class Server:
         client socket will also be closed
         """
         try:
-            msg = client_sock.recv(1024).rstrip().decode('utf-8')
-            logging.info(
-                'Message received from connection {}. Msg: {}'
-                .format(client_sock.getpeername(), msg))
-            client_sock.send("Your Message has been received: {}\n".format(msg).encode('utf-8'))
+            request = client_request.ClientRequest(client_sock)
+            request.handle()
         except OSError:
             logging.info("Error while reading socket {}".format(client_sock))
         finally:
@@ -72,5 +72,6 @@ class Server:
     def sig_handler(self, sig, frame):
         self.active = False
         self._server_socket.shutdown(socket.SHUT_RDWR)
+        self._server_socket.close()
         raise SignalException()
 
