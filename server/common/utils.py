@@ -1,10 +1,12 @@
 import time
 import datetime
 import logging
+from multiprocessing import Lock
+
+from .file import File
 
 """ Winners storage location. """
 STORAGE = "./winners"
-
 
 """ Contestant data model. """
 class Contestant:
@@ -22,24 +24,20 @@ class Contestant:
 		return "{} {} {} {}".format(self.first_name, self.last_name, self.document, self.birthdate)
 
 
-""" Checks whether a contestant is a winner or not. """
 def is_winner(contestant: Contestant) -> bool:
 	# Simulate strong computation requirements using a sleep to increase function retention and force concurrency.
 	time.sleep(0.001)
-	winner = hash(contestant) % 17 == 0
-	logging.debug('is_winner {} {}? {}'.format(contestant.first_name, contestant.last_name, winner))
-	return winner
+	return hash(contestant) % 17 == 0	
 
 
 """ Persist the information of each winner in the STORAGE file. Not thread-safe/process-safe. """
 def persist_winners(winners: list[Contestant]) -> None:
-	with open(STORAGE, 'a+') as file:
+	with Lock():
 		for winner in winners:
-			file.write(f'Full name: {winner.first_name} {winner.last_name} | Document: {winner.document} | Date of Birth: {winner.birthdate.strftime("%d/%m/%Y")}\n')
+			File.write(f'Full name: {winner.first_name} {winner.last_name} | Document: {winner.document} | Date of Birth: {winner.birthdate.strftime("%d/%m/%Y")}\n')
 
 
 def winners_query(contestants: list[Contestant]):
-	winners = list(map(lambda x: x.document, filter(is_winner, contestants)))
-	logging.debug('winners_query {}'.format(winners))
-	return winners
-
+	winners = list(filter(is_winner, contestants))
+	persist_winners(winners)
+	return list(map(lambda x: x.document, winners))

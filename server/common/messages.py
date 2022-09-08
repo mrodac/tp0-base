@@ -32,14 +32,14 @@ class ContestantsMessage:
         self.contestants = []
     
     def __repr__(self):
-        return repr(self.contestants)
+        return 'ContestantsMessage [' + str(len(self.contestants)) + ']'
 
 class WinnersMessage:
     def __init__(self):
         self.winners = []
     
     def __repr__(self):
-        return repr(self.winners)
+        return 'WinnersMessage [' + str(len(self.winners)) + ']'
 
 
 def read_contestant(conn: socket.socket):

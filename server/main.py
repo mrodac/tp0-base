@@ -4,7 +4,7 @@ import os
 import logging
 from configparser import ConfigParser
 from common.server import Server
-
+from common.file import File
 
 def initialize_config():
     """ Parse env variables or config file to find program config params
@@ -24,7 +24,7 @@ def initialize_config():
     config_params = {}
     try:
         config_params["port"] = int(config["DEFAULT"]["server_port"])
-        config_params["listen_backlog"] = int(config["DEFAULT"]["server_listen_backlog"])
+        config_params["server_child_processes"] = int(config["DEFAULT"]["server_child_processes"])
         config_params["logging_level"] = config["DEFAULT"]["logging_level"]
     except KeyError as e:
         raise KeyError("Key was not found. Error: {} .Aborting server".format(e))
@@ -42,9 +42,16 @@ def main():
     # of the component
     logging.debug("Server configuration: {}".format(config_params))
 
+    File.open()
+
     # Initialize server and start server loop
-    server = Server(config_params["port"], config_params["listen_backlog"])
+    server = Server(config_params["port"], config_params["server_child_processes"])
     server.run()
+    logging.debug("Server OFFLINE")
+
+    File.close()
+
+    print()
 
 
 def initialize_log(logging_level):

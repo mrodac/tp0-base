@@ -24,10 +24,10 @@ render_server () {
     entrypoint: python3 /main.py
     volumes:
       - ./config/server.ini:/config.ini
+      - ./.data/winners:/winners
     environment:
       - PYTHONUNBUFFERED=1
       - SERVER_PORT=12345
-      - SERVER_LISTEN_BACKLOG=7
       - LOGGING_LEVEL=DEBUG
     networks:
       - testing_net"""      
