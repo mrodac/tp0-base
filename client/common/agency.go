@@ -66,8 +66,6 @@ func (domain *Agency) CheckWinners() error {
 		}
 
 		slice = append(slice, contestant)
-
-		//log.Debugf("[CLIENT 1] Contestant: %d %s %s %s", contestant.Document, contestant.FirstName, contestant.LastName, contestant.BirthDate)
 	}
 
 	msg := &ContestantsQuery{
@@ -78,7 +76,7 @@ func (domain *Agency) CheckWinners() error {
 
 	if len(slice) > 0 {
 		percentage := float64(len(res.Winners)) / float64(len(slice))
-		log.Infof("Winner percentage: %f", 100*percentage)
+		log.Infof("Winner percentage: %f %%", 100*percentage)
 	}
 
 	return nil

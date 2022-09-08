@@ -6,3 +6,4 @@ bin/
 /.project
 /.pydevproject
 __pycache__
+.data/winners
