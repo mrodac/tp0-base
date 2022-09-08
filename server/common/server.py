@@ -2,24 +2,23 @@ import socket
 import logging
 import signal
 import os
-from multiprocessing import Queue, Process, Value, active_children
+from multiprocessing import Queue, Process, Value
 
 from . import client_request
-        
-class SignalException(Exception):
-	pass
+from .utils import SignalException
+from .storage import Storage
 
 def child_signal_handler(sig, frame):
     raise SignalException() 
 
-def do_work(workQueue, totalWinners, processingCount):
+def do_work(workQueue, dataQueue, totalWinners, processingCount):
     logging.info("Starting child process {}".format(os.getpid()))
     signal.signal(signal.SIGTERM, child_signal_handler)
 
     while True:
         try:
             request = workQueue.get()
-            request.handle(totalWinners, processingCount)
+            request.handle(dataQueue, totalWinners, processingCount)
         except SignalException:
             logging.debug("Process {} got SIGTERM".format(os.getpid()))
             break
@@ -40,6 +39,7 @@ class Server:
         self.workerCount = server_child_processes
         self.workQueue = Queue()
 
+        self.workers = []
 
     def run(self):
         """
@@ -54,7 +54,8 @@ class Server:
         totalWinners = Value('i', 0)
         processingCount = Value('i', 0)
         for i in range(self.workerCount):
-            process = Process(target=do_work, args=(self.workQueue, totalWinners, processingCount))
+            process = Process(target=do_work, args=(self.workQueue, Storage.dataQueue, totalWinners, processingCount))
+            self.workers.append(process)
             process.start()
         
         while True:
@@ -68,7 +69,7 @@ class Server:
                 logging.info('Accept interrupted by signal')
                 break
         
-        for process in active_children():
+        for process in self.workers:
             process.join()
     
     
@@ -77,7 +78,7 @@ class Server:
 
         self.workQueue.close()
 
-        for process in active_children():
+        for process in self.workers:
             process.terminate()
 
         self._server_socket.shutdown(socket.SHUT_RDWR)
